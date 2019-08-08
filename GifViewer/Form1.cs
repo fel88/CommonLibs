@@ -241,5 +241,10 @@ namespace GifViewer
             var fr = g.GetFrame(frm);
             Clipboard.SetImage(fr);
         }
+
+        private void CheckBox1_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
