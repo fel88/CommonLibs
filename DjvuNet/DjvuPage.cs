@@ -878,10 +878,11 @@ namespace DjvuNet
         /// <returns></returns>
         public System.Drawing.Bitmap BuildPageImage()
         {
-            int subsample = 1;
-            if ( this.Info==null && Document.FormChunk.Children[0].ChunkID=="DJVU" && Document.FormChunk.Children[1] is InfoChunk )
-            	this._info = (InfoChunk)Document.FormChunk.Children[1];
-            
+            throw new NotImplementedException();
+            /*int subsample = 1;
+            if (this.Info == null && Document.FormChunk.Children[0].ChunkID == "DJVU" && Document.FormChunk.Children[1] is InfoChunk)
+                this._info = (InfoChunk)Document.FormChunk.Children[1];
+
             int width = Info.Width / subsample;
             int height = Info.Height / subsample;
 
@@ -889,7 +890,7 @@ namespace DjvuNet
 
             if (map == null) return new Bitmap(Info.Width, Info.Height);
 
-            int[] pixels = new int[width * height];            
+            int[] pixels = new int[width * height];
 
             map.FillRgbPixels(0, 0, width, height, pixels, 0, width);
             var image = ConvertDataToImage(pixels);
@@ -899,29 +900,31 @@ namespace DjvuNet
                 image = InvertImage(image);
             }
 
-            return image;
+            return image;*/
         }
+
+
 
         /// <summary>
         /// Gets the image for the page
         /// </summary>
         /// <returns></returns>
-        public unsafe System.Drawing.Bitmap BuildImage(int subsample = 1)
+        public System.Drawing.Bitmap BuildImage(int subsample = 1)
         {
             lock (_loadingLock)
             {
                 DateTime start = DateTime.Now;
                 System.Drawing.Bitmap background = GetBackgroundImage(subsample, false);
                 Console.WriteLine("Background: " + DateTime.Now.Subtract(start).TotalMilliseconds);
-                start = DateTime.Now;                
+                start = DateTime.Now;
 
                 using (System.Drawing.Bitmap foreground = GetForegroundImage(subsample, false))
                 {
                     Console.WriteLine("Foreground: " + DateTime.Now.Subtract(start).TotalMilliseconds);
-                    start = DateTime.Now;                    
+                    start = DateTime.Now;
 
                     using (System.Drawing.Bitmap mask = GetTextImage(subsample, false))
-                    {                        
+                    {
                         Console.WriteLine("Mask: " + DateTime.Now.Subtract(start).TotalMilliseconds);
                         start = DateTime.Now;
 
@@ -940,35 +943,70 @@ namespace DjvuNet
                         BitmapData maskData = mask.LockBits(new System.Drawing.Rectangle(0, 0, mask.Width, mask.Height),
                                                             ImageLockMode.ReadOnly, mask.PixelFormat);
 
+
+
+                        if (backgroundData.Height != foregroundData.Height)
+                        {
+                            throw new ArgumentException("foreground height!=background height");
+                        }
+
+                        int size = backgroundData.Stride * backgroundData.Height;
+                        byte[] data = new byte[size];
+                        
+
+
+                        int fsize = foregroundData.Stride * foregroundData.Height;
+                        byte[] fdata = new byte[fsize];
+                        System.Runtime.InteropServices.Marshal.Copy(foregroundData.Scan0, fdata, 0, fsize);
+
+                        int msize = maskData.Stride * maskData.Height;
+                        byte[] mdata = new byte[msize];
+                        System.Runtime.InteropServices.Marshal.Copy(maskData.Scan0, mdata, 0, msize);
+
                         //int maskPixelSize = GetPixelSize(maskData);
 
                         int height = background.Height;
                         int width = background.Width;
+                        var bpxsz = Bitmap.GetPixelFormatSize(background.PixelFormat) / 8;
+                        var frsz = Bitmap.GetPixelFormatSize(foreground.PixelFormat) / 8;
+                        var msksz = Bitmap.GetPixelFormatSize(mask.PixelFormat) / 8;
+                        for (int y = 0; y < height; y++)
+                        {
 
-                        Parallel.For(
-                            0,
-                            height,
-                            y =>
+
+
+                            byte maskRow = mdata[y * maskData.Stride];                            
+                            int mult = y * backgroundData.Stride;
+                            int fmult = y * foregroundData.Stride;
+                            for (int x = 0; x < width; x++)
                             {
-                                byte* maskRow = (byte*)maskData.Scan0 + (y * maskData.Stride);
-                                uint* backgroundRow = (uint*)(backgroundData.Scan0 + (y * backgroundData.Stride));
-                                uint* foregroundRow = (uint*)(foregroundData.Scan0 + (y * foregroundData.Stride));
-
-                                for (int x = 0; x < width; x++)
+                                // Check if the mask byte is set
+                                maskRow = mdata[y * maskData.Stride + x * msksz];
+                                if (maskRow > 0)
                                 {
-                                    // Check if the mask byte is set
-                                    if (maskRow[x] > 0)
+                                    var flag = _isInverted == true;
+                                    var b1 = BitConverter.ToUInt32(fdata, fmult + x * frsz);
+                                    var b2 = InvertColor(b1);
+                                    var b3 = flag ? b2 : b1;
+
+                                    for (int i = 0; i < frsz; i++)
                                     {
-                                        backgroundRow[x] = _isInverted == true
-                                                               ? InvertColor(foregroundRow[x])
-                                                               : foregroundRow[x];
+                                        data[mult + x * bpxsz + i] = (byte)((b3 & (0xff << (i * 8))) >> (i * 8));
                                     }
-                                    else if (_isInverted == true)
-                                    {
-                                        backgroundRow[x] = InvertColor(backgroundRow[x]);
-                                    }
+                                    var res = BitConverter.ToUInt32(data, mult + x * bpxsz);
                                 }
-                            });
+                                else if (_isInverted == true)
+                                {
+                                    var b2 = InvertColor(BitConverter.ToInt32(data, mult + x * bpxsz));
+                                    for (int i = 0; i < frsz; i++)
+                                    {
+                                          data[mult + x * bpxsz + i] = (byte)((b2 & (0xff << (i * 8))) >> (i * 8));
+                                    }                                    
+                                }
+                            }
+                        }
+
+                        System.Runtime.InteropServices.Marshal.Copy(data, 0, backgroundData.Scan0, data.Length);
 
                         mask.UnlockBits(maskData);
                         foreground.UnlockBits(foregroundData);
@@ -1044,9 +1082,10 @@ namespace DjvuNet
         /// </summary>
         /// <param name="pixels"></param>
         /// <returns></returns>
-        private unsafe System.Drawing.Bitmap ConvertDataToImage(int[] pixels)
+        private System.Drawing.Bitmap ConvertDataToImage(int[] pixels)
         {
-            // create a bitmap and manipulate it
+            throw new NotImplementedException();
+            /*// create a bitmap and manipulate it
             System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(Info.Width, Info.Height, PixelFormat.Format32bppArgb);
             BitmapData bits = bmp.LockBits(new System.Drawing.Rectangle(0, 0, Info.Width, Info.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
 
@@ -1062,7 +1101,7 @@ namespace DjvuNet
 
             bmp.UnlockBits(bits);
 
-            return bmp;
+            return bmp;*/
         }
 
         private bool IsLegalBilevel()
@@ -1220,7 +1259,7 @@ namespace DjvuNet
                         GRect comprect = new GRect();
                         compset = new List<int>();
 
-                        for (int pos = 0; pos < components.Count; )
+                        for (int pos = 0; pos < components.Count;)
                         {
                             int blitno = ((int)components[pos]);
                             JB2Blit pblit = fgJb2.Blits[blitno];
@@ -1349,38 +1388,40 @@ namespace DjvuNet
             return 16;
         }
 
-        private unsafe System.Drawing.Bitmap InvertImage(System.Drawing.Bitmap invertImage)
+        private System.Drawing.Bitmap InvertImage(System.Drawing.Bitmap invertImage)
         {
-            if (invertImage == null)
-            {
-                return null;
-            }
+            return null;
 
-            var image = (System.Drawing.Bitmap)invertImage.Clone();
+            //if (invertImage == null)
+            //{
+            //    return null;
+            //}
 
-            BitmapData imageData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
-                                                  ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+            //var image = (System.Drawing.Bitmap)invertImage.Clone();
 
-            int height = image.Height;
-            int width = image.Width;
+            //BitmapData imageData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
+            //                                      ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
-            Parallel.For(
-                0,
-                height,
-                y =>
-                {
-                    uint* imageRow = (uint*)(imageData.Scan0 + (y * imageData.Stride));
+            //int height = image.Height;
+            //int width = image.Width;
 
-                    for (int x = 0; x < width; x++)
-                    {
-                        // Check if the mask byte is set
-                        imageRow[x] = InvertColor(imageRow[x]);
-                    }
-                });
+            //Parallel.For(
+            //    0,
+            //    height,
+            //    y =>
+            //    {
+            //        uint* imageRow = (uint*)(imageData.Scan0 + (y * imageData.Stride));
 
-            image.UnlockBits(imageData);
+            //        for (int x = 0; x < width; x++)
+            //        {
+            //            // Check if the mask byte is set
+            //            imageRow[x] = InvertColor(imageRow[x]);
+            //        }
+            //    });
 
-            return image;
+            //image.UnlockBits(imageData);
+
+            //return image;
         }
 
         /// <summary>

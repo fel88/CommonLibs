@@ -199,7 +199,7 @@ namespace DjvuNet.Graphics
         static Bitmap()
         {
             {
-                for (int i = 0; i < RampRefArray.Length; )
+                for (int i = 0; i < RampRefArray.Length;)
                 {
                     RampRefArray[i++] = null;
                 }
@@ -222,22 +222,22 @@ namespace DjvuNet.Graphics
         public Bitmap Duplicate()
         {
             return new Bitmap
-                       {
-                           BlueOffset = BlueOffset,
-                           Border = Border,
-                           Data = Data,
-                           Grays = Grays,
-                           GreenOffset = GreenOffset,
-                           _maxRowOffset = _maxRowOffset,
-                           BytesPerPixel = BytesPerPixel,
-                           ImageWidth = ImageWidth,
-                           IsRampNeeded = IsRampNeeded,
-                           ImageHeight = ImageHeight,
-                           Properties = Properties,
-                           _rampData = _rampData,
-                           RedOffset = RedOffset,
-                           BytesPerRow = BytesPerRow
-                       };
+            {
+                BlueOffset = BlueOffset,
+                Border = Border,
+                Data = Data,
+                Grays = Grays,
+                GreenOffset = GreenOffset,
+                _maxRowOffset = _maxRowOffset,
+                BytesPerPixel = BytesPerPixel,
+                ImageWidth = ImageWidth,
+                IsRampNeeded = IsRampNeeded,
+                ImageHeight = ImageHeight,
+                Properties = Properties,
+                _rampData = _rampData,
+                RedOffset = RedOffset,
+                BytesPerRow = BytesPerRow
+            };
         }
 
         /// <summary> Query a pixel as boolean
@@ -276,12 +276,9 @@ namespace DjvuNet.Graphics
         /// </param>
         /// <returns> the gray scale value
         /// </returns>
-        public unsafe int GetByteAt(int offset)
+        public  int GetByteAt(int offset)
         {
-            fixed (sbyte* dataLocation = Data)
-            {
-                return ((offset < Border) || (offset >= _maxRowOffset)) ? 0 : (0xff & dataLocation[offset]);
-            }
+            return ((offset < Border) || (offset >= _maxRowOffset)) ? 0 : (0xff & Data[offset]);
         }
 
         /// <summary> Insert another bitmap at the specified location.  Note that both bitmaps
@@ -446,7 +443,7 @@ namespace DjvuNet.Graphics
         /// </param>
         /// <returns> true if pixels are inserted
         /// </returns>
-        public unsafe virtual bool InsertMap(Bitmap bit, int dx, int dy, bool doBlit)
+        public  virtual bool InsertMap(Bitmap bit, int dx, int dy, bool doBlit)
         {
             int x0 = (dx > 0) ? dx : 0;
             int y0 = (dy > 0) ? dy : 0;
@@ -470,15 +467,15 @@ namespace DjvuNet.Graphics
 
                     if (doBlit)
                     {
-                        fixed (sbyte* dataLocation = Data, bitDataLocation = bit.Data)
+                        //fixed (sbyte* dataLocation = Data, bitDataLocation = bit.Data)
                         {
                             // This is not really correct.  We should reduce the original level by the
                             // amount of the new level.  But since we are normally dealing with non-overlapping
                             // or bitonal blits it really doesn't matter.
                             do
                             {
-                                int g = dataLocation[offset] + bitDataLocation[refOffset++];
-                                dataLocation[offset++] = (g < Grays) ? (sbyte)g : gmax;
+                                int g = Data[offset] + bit.Data[refOffset++];
+                                Data[offset++] = (g < Grays) ? (sbyte)g : gmax;
                             } while (--i > 0);
                         }
 
@@ -493,11 +490,11 @@ namespace DjvuNet.Graphics
                     }
                     else
                     {
-                        fixed (sbyte* dataLocation = Data, bitDataLocation = bit.Data)
+                        //fixed (sbyte* dataLocation = Data, bitDataLocation = bit.Data)
                         {
                             do
                             {
-                                dataLocation[offset++] = bitDataLocation[refOffset++];
+                                Data[offset++] = bit.Data[refOffset++];
                             } while (--i > 0);
                         }
 
@@ -581,7 +578,7 @@ namespace DjvuNet.Graphics
 
                 for (int i = 0; i < ImageHeight; i++)
                 {
-                    for (int j = ImageWidth, k = RowOffset(i), kr = ref_Renamed.RowOffset(i); j-- > 0; )
+                    for (int j = ImageWidth, k = RowOffset(i), kr = ref_Renamed.RowOffset(i); j-- > 0;)
                     {
                         Data[k++] = ref_Renamed.Data[kr++];
                     }

@@ -920,7 +920,7 @@ namespace DjvuNet.Graphics
         ///
         /// </param>
         /// <throws>  IllegalArgumentException if the specified bounds are not contained in the page </throws>
-        public unsafe virtual void Stencil(Bitmap mask, PixelMap foregroundMap, int supersample, int subsample, Rectangle bounds,
+        public virtual void Stencil(Bitmap mask, PixelMap foregroundMap, int supersample, int subsample, Rectangle bounds,
                                     double gamma)
         {
             // Check arguments
@@ -1020,19 +1020,19 @@ namespace DjvuNet.Graphics
                     // Perform pixel operation
                     if (srcpix > 0)
                     {
-                        fixed (int* gTableLocation = gtable)
+                        //fixed (int* gTableLocation = gtable)
                         {
                             if (srcpix >= maxgray)
                             {
-                                dst.SetBGR(gTableLocation[fgx.Blue], gTableLocation[fgx.Green],
-                                           gTableLocation[fgx.Red]);
+                                dst.SetBGR(gtable[fgx.Blue], gtable[fgx.Green],
+                                           gtable[fgx.Red]);
                             }
                             else
                             {
                                 int level = multiplier[srcpix];
-                                dst.SetBGR(((dst.Blue * (0x10000 - level)) + (level * gTableLocation[fgx.Blue])) >> 16,
-                                           ((dst.Green * (0x10000 - level)) + (level * gTableLocation[fgx.Green])) >> 16,
-                                           ((dst.Red * (0x10000 - level)) + (level * gTableLocation[fgx.Red])) >> 16);
+                                dst.SetBGR(((dst.Blue * (0x10000 - level)) + (level * gtable[fgx.Blue])) >> 16,
+                                           ((dst.Green * (0x10000 - level)) + (level * gtable[fgx.Green])) >> 16,
+                                           ((dst.Red * (0x10000 - level)) + (level * gtable[fgx.Red])) >> 16);
                             }
                         }
                     }
