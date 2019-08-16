@@ -37,7 +37,7 @@ namespace DjvuNet.DataChunks.Text
 
             private set
             {
-                if (TextLength != value)
+                if (_textLength != value)
                 {
                     _textLength = value;
                 }
@@ -67,7 +67,7 @@ namespace DjvuNet.DataChunks.Text
 
             private set
             {
-                if (Text != value)
+                if (_text != value)
                 {
                     _text = value;
                 }
@@ -78,12 +78,12 @@ namespace DjvuNet.DataChunks.Text
 
         #region Version
 
-        private sbyte _version;
+        private byte _version;
 
         /// <summary>
         /// Gets the version of the text chunk
         /// </summary>
-        public sbyte Version
+        public int Version
         {
             get
             {
@@ -93,9 +93,9 @@ namespace DjvuNet.DataChunks.Text
 
             private set
             {
-                if (Version != value)
+                if (_version != value)
                 {
-                    _version = value;
+                    _version = (byte)value;
                 }
             }
         }
@@ -119,7 +119,7 @@ namespace DjvuNet.DataChunks.Text
 
             private set
             {
-                if (Zone != value)
+                if (_zone != value)
                 {
                     _zone = value;
                 }
@@ -175,24 +175,48 @@ namespace DjvuNet.DataChunks.Text
             }
         }
 
+        public byte[] TextBytes;
         /// <summary>
         /// Reads the compressed text data
         /// </summary>
         private void ReadCompressedTextData()
         {
-            if (Length == 0) return;
-
-            using (DjvuReader reader = GetTextDataReader(_dataLocation))
+            if (Length > 0)
             {
-                _textLength = reader.ReadInt24MSB();
-                byte[] textBytes = reader.ReadBytes(_textLength);
-                _text = Encoding.UTF8.GetString(textBytes);
-                _version = reader.ReadSByte();
+                using (DjvuReader reader = GetTextDataReader(_dataLocation))
+                {
+                    int length = (int)reader.ReadUInt24BigEndian();
+                    byte[] textBytes = reader.ReadBytes(length);
+                    TextBytes = textBytes;
+                    Text = Encoding.UTF8.GetString(textBytes);
+                    TextLength = _text.Length;
+                    Version = reader.ReadByte();
 
-                _zone = new TextZone(reader, null, null, this);
+                    Zone = new TextZone(reader, null, null, this);
+                }
             }
-
             _isDecoded = true;
+            /* if (Length == 0) return;
+
+             using (DjvuReader reader = GetTextDataReader(_dataLocation))
+             {
+                 _textLength = (int)reader.ReadUInt24BigEndian();
+                 byte[] textBytes = reader.ReadBytes(_textLength);
+                 _text = Encoding.UTF8.GetString(textBytes);
+                 if (_text.Contains("предварительной"))
+                 {
+
+                 }
+
+
+
+                 _version = reader.ReadByte();
+                 _textLength = _text.Length;
+
+                 _zone = new TextZone(reader, null, null, this);
+             }
+
+             _isDecoded = true;*/
         }
 
         #endregion Private Methods

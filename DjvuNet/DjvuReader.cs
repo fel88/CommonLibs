@@ -79,6 +79,46 @@ namespace DjvuNet
 
         #region Public Methods
 
+
+        /// <summary>
+        /// Reads a 2-sbyte unsigned integer from the current stream using little-endian encoding and advances the position of the stream by two bytes.
+        /// </summary>
+        /// <returns>
+        /// A 2-sbyte unsigned integer read from this stream.
+        /// </returns>
+        /// <exception cref="T:System.IO.EndOfStreamException">The end of the stream is reached. </exception><exception cref="T:System.ObjectDisposedException">The stream is closed. </exception><exception cref="T:System.IO.IOException">An I/O error occurs. </exception><filterpriority>2</filterpriority>
+        public ushort ReadUInt16BigEndian()
+        {
+            var value = ReadBytes(2);
+            Array.Reverse(value);
+            return BitConverter.ToUInt16(value, 0);
+        }
+
+        /// <summary>
+        /// Reads a 3 sbyte unsigned integer value
+        /// </summary>
+        /// <returns></returns>
+        public uint ReadUInt24BigEndian()
+        {
+            byte[] buffer = new byte[4];
+            Read(buffer, 1, 3);
+            Array.Reverse(buffer);
+            return BitConverter.ToUInt32(buffer, 0);
+        }
+
+        /// <summary>
+        /// Reads a 3 sbyte signed integer value
+        /// </summary>
+        /// <returns></returns>
+        public int ReadInt24BigEndian()
+        {
+            byte[] buffer = new byte[4];
+            Read(buffer, 1, 3);
+            Array.Reverse(buffer);
+            if (buffer[2] >> 7 == 1)
+                buffer[3] = 0xff;
+            return BitConverter.ToInt32(buffer, 0);
+        }
         public Image GetJPEGImage(int length)
         {            
             MemoryStream mem = new MemoryStream(ReadBytes(length));

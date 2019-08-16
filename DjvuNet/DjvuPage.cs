@@ -918,7 +918,7 @@ namespace DjvuNet
                 Console.WriteLine("Background: " + DateTime.Now.Subtract(start).TotalMilliseconds);
                 start = DateTime.Now;
 
-                using (System.Drawing.Bitmap foreground = GetForegroundImage(subsample, false))
+                using (System.Drawing.Bitmap _foreground = GetForegroundImage(subsample, false))
                 {
                     Console.WriteLine("Foreground: " + DateTime.Now.Subtract(start).TotalMilliseconds);
                     start = DateTime.Now;
@@ -934,6 +934,20 @@ namespace DjvuNet
                             background.LockBits(new System.Drawing.Rectangle(0, 0, background.Width, background.Height),
                                                 ImageLockMode.ReadWrite, background.PixelFormat);
                         int backgroundPixelSize = GetPixelSize(backgroundData);
+
+
+                        Bitmap foreground = null;
+                        if (_foreground.Height != background.Height || _foreground.Width!= background.Width)
+                        {
+                            foreground = new Bitmap(background.Width, background.Height);
+                            System.Drawing.Graphics gr = System.Drawing.Graphics.FromImage(foreground);
+                            gr.DrawImage(_foreground, new Rectangle(0, 0, background.Width, background.Height), new Rectangle(0, 0, _foreground.Width, _foreground.Height), GraphicsUnit.Pixel);
+                        }
+                        else
+                        {
+                            foreground = _foreground;
+                        }
+
 
                         BitmapData foregroundData =
                             foreground.LockBits(new System.Drawing.Rectangle(0, 0, foreground.Width, foreground.Height),
@@ -952,7 +966,7 @@ namespace DjvuNet
 
                         int size = backgroundData.Stride * backgroundData.Height;
                         byte[] data = new byte[size];
-                        
+
 
 
                         int fsize = foregroundData.Stride * foregroundData.Height;
@@ -975,7 +989,7 @@ namespace DjvuNet
 
 
 
-                            byte maskRow = mdata[y * maskData.Stride];                            
+                            byte maskRow = mdata[y * maskData.Stride];
                             int mult = y * backgroundData.Stride;
                             int fmult = y * foregroundData.Stride;
                             for (int x = 0; x < width; x++)
@@ -1000,8 +1014,8 @@ namespace DjvuNet
                                     var b2 = InvertColor(BitConverter.ToInt32(data, mult + x * bpxsz));
                                     for (int i = 0; i < frsz; i++)
                                     {
-                                          data[mult + x * bpxsz + i] = (byte)((b2 & (0xff << (i * 8))) >> (i * 8));
-                                    }                                    
+                                        data[mult + x * bpxsz + i] = (byte)((b2 & (0xff << (i * 8))) >> (i * 8));
+                                    }
                                 }
                             }
                         }

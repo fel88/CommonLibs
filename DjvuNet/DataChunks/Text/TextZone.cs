@@ -389,19 +389,19 @@ namespace DjvuNet.DataChunks.Text
         private void DecodeZoneData(DjvuReader reader, TextZone sibling, TextChunk chunkParent)
         {
             _zoneType = (ZoneTypes)reader.ReadByte();
-            _x = reader.ReadUInt16MSB() - 0x8000;
-            _y = reader.ReadUInt16MSB() - 0x8000;
-            _width = reader.ReadUInt16MSB() - 0x8000;
-            _height = reader.ReadUInt16MSB() - 0x8000;
+            _x = reader.ReadUInt16BigEndian() - 0x8000;
+            _y = reader.ReadUInt16BigEndian() - 0x8000;
+            _width = reader.ReadUInt16BigEndian() - 0x8000;
+            _height = reader.ReadUInt16BigEndian() - 0x8000;
 
-            _textOffset = reader.ReadUInt16MSB() - 0x8000;
-            _textLength = reader.ReadInt24MSB();
+            _textOffset = reader.ReadUInt16BigEndian() - 0x8000;
+            _textLength = reader.ReadInt24BigEndian();
 
             ResolveOffsets(_parent, sibling);
 
             _rectangle = new Rectangle(_x, _y, _width, _height);
 
-            int childrenZones = reader.ReadInt24MSB();
+            int childrenZones = reader.ReadInt24BigEndian();
             List<TextZone> children = new List<TextZone>();
 
             TextZone childrenSibling = null;
@@ -484,7 +484,11 @@ namespace DjvuNet.DataChunks.Text
                     return "";
                 }
 
-                return ChunkParent.Text.Substring(_textOffset, length).Trim();
+                //return ChunkParent.Text.Substring(_textOffset, length).Trim();
+                var tt = ChunkParent.Text;
+
+                var str = Encoding.UTF8.GetString(ChunkParent.TextBytes.Skip(_textOffset).Take(length).ToArray());
+                return str;
             }
 
             if (ZoneType == ZoneTypes.Line)
