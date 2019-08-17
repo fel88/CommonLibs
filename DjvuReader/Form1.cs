@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -115,7 +116,10 @@ namespace DjvuReader
                 Cache.Clear();
                 pageIndex = 0;
                 sy = 0;
+                var sw = Stopwatch.StartNew();
                 doc = new DjvuNet.DjvuDocument(ofd.FileName);
+                sw.Stop();
+                var ms1 = sw.ElapsedMilliseconds;
                 page1 = doc.Pages[0].BuildImage();
 
                 page1 = Resize(page1, koef);
@@ -359,7 +363,6 @@ namespace DjvuReader
         TextZone highlightedZone = null;
         private void Button1_Click(object sender, EventArgs e)
         {
-
             listView1.Items.Clear();
             for (int i = 0; i < doc.Pages.Count(); i++)
             {

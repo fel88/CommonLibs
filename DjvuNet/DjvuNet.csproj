@@ -91,6 +91,12 @@
     <Compile Include="DjvuPage.cs" />
     <Compile Include="DjvuReader.cs" />
     <Compile Include="DataChunks\IFFChunk.cs" />
+    <Compile Include="DjvuReaderControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DjvuReaderControl.Designer.cs">
+      <DependentUpon>DjvuReaderControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Extentions\ExtentionMethods.cs" />
     <Compile Include="Graphics\Bitmap.cs" />
     <Compile Include="Graphics\DjvuImage.cs" />

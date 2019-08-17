@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YoutubeExtractor", "Youtube
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DjvuReader", "DjvuReader\DjvuReader.csproj", "{B4C5AE22-C292-4F35-8E16-2DF4C819D77F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdfiumViewer", "PdfiumViewer\PdfiumViewer.csproj", "{438914B6-5D1C-482C-B942-5C0E057EEF6F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{B4C5AE22-C292-4F35-8E16-2DF4C819D77F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4C5AE22-C292-4F35-8E16-2DF4C819D77F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4C5AE22-C292-4F35-8E16-2DF4C819D77F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{438914B6-5D1C-482C-B942-5C0E057EEF6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{438914B6-5D1C-482C-B942-5C0E057EEF6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{438914B6-5D1C-482C-B942-5C0E057EEF6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{438914B6-5D1C-482C-B942-5C0E057EEF6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
