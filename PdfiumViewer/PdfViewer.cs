@@ -233,6 +233,10 @@ namespace PdfiumViewer
             return node;
         }
 
+        public void SetPage(int page)
+        {   
+            _renderer.Page = page;
+        }
         private void _bookmarks_AfterSelect(object sender, TreeViewEventArgs e)
         {
             _renderer.Page = ((PdfBookmark)e.Node.Tag).PageIndex;

@@ -286,13 +286,9 @@ namespace GifLib
 
             lzwCodeSize = lzwMinimumCodeSize + 1;
         }
-
-        public static GifContainer Parse(string path)
+        public static GifContainer Parse(Stream fs)
         {
             GifContainer ret = new GifContainer();
-
-
-            using (var fs = new FileStream(path, FileMode.Open))
             {
                 ret.Header.Read(fs);
                 ret.LogicalScreen.Read(fs);
@@ -343,10 +339,17 @@ namespace GifLib
                 }
 
             }
-            //ret.Bmp = Bitmap.FromFile(path) as Bitmap;
+
             ret.UpdateInfo();
             return ret;
         }
-    }
 
+        public static GifContainer Parse(string path)
+        {
+            using (var fs = new FileStream(path, FileMode.Open))
+            {
+                return Parse(fs);
+            }
+        }
+    }
 }
