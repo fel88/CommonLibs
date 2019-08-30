@@ -393,10 +393,19 @@ namespace DjvuNet
 
         public DjvuDocument(string location)
         {
-            Identifier = 0;            
+            Identifier = 0;
             _reader = new DjvuReader(location);
             _name = Path.GetFileNameWithoutExtension(location);
             _location = location;
+
+            DecodeDjvuDocument(_reader);
+        }
+        public DjvuDocument(Stream stream, string fileName)
+        {
+            Identifier = 0;
+            _reader = new DjvuReader(stream);
+            _name = Path.GetFileNameWithoutExtension(fileName);
+            _location = fileName;
 
             DecodeDjvuDocument(_reader);
         }
@@ -479,50 +488,50 @@ namespace DjvuNet
         /// Builds the list of pages
         /// </summary>
 		private void BuildPageList()
-		{
-			List<DjvuPage> pages = new List<DjvuPage>();
-			Queue<DirmComponent> pageHeaders = null;
-			Queue<TH44Chunk> thumbnail = new Queue<TH44Chunk>(FormChunk.GetChildrenItems<TH44Chunk>());
-			int pageCount = 1;
-			DjviChunk[] sharedItems = FormChunk.GetChildrenItems<DjviChunk>();
-			
-			if (this.FormChunk.Children.Any() && this.FormChunk.Children[0].ChunkID=="DJVU")
-			{
-				foreach (IFFChunk child in FormChunk.Children)
-					if (child is FormChunk)
-				{
-					FormChunk form = (FormChunk)child;
-					
-					TH44Chunk currentThumbnail = thumbnail.Any() ? thumbnail.Dequeue() : null;
-					DjvuPage newPage = new DjvuPage(pageCount++, this, null, currentThumbnail, sharedItems, form);
-					pages.Add(newPage);
-				}
-			}
-			else
-			{
-				pageHeaders = new Queue<DirmComponent>(Directory.Components.Where(x => x.IsPage));
-			}
+        {
+            List<DjvuPage> pages = new List<DjvuPage>();
+            Queue<DirmComponent> pageHeaders = null;
+            Queue<TH44Chunk> thumbnail = new Queue<TH44Chunk>(FormChunk.GetChildrenItems<TH44Chunk>());
+            int pageCount = 1;
+            DjviChunk[] sharedItems = FormChunk.GetChildrenItems<DjviChunk>();
+
+            if (this.FormChunk.Children.Any() && this.FormChunk.Children[0].ChunkID == "DJVU")
+            {
+                foreach (IFFChunk child in FormChunk.Children)
+                    if (child is FormChunk)
+                    {
+                        FormChunk form = (FormChunk)child;
+
+                        TH44Chunk currentThumbnail = thumbnail.Any() ? thumbnail.Dequeue() : null;
+                        DjvuPage newPage = new DjvuPage(pageCount++, this, null, currentThumbnail, sharedItems, form);
+                        pages.Add(newPage);
+                    }
+            }
+            else
+            {
+                pageHeaders = new Queue<DirmComponent>(Directory.Components.Where(x => x.IsPage));
+            }
 
 
-			foreach (IFFChunk child in FormChunk.Children)
-			{
-				if (child is FormChunk)
-				{
-					FormChunk form = (FormChunk)child;
+            foreach (IFFChunk child in FormChunk.Children)
+            {
+                if (child is FormChunk)
+                {
+                    FormChunk form = (FormChunk)child;
 
-					if (form.Children.Any(x => x.ChunkType == ChunkTypes.Form_Djvu))
-					{
-						DirmComponent currentHeader = pageHeaders.Count() > 0 ? pageHeaders.Dequeue() : null;
-						TH44Chunk currentThumbnail = thumbnail.Count() > 0 ? thumbnail.Dequeue() : null;
-						DjvuPage newPage = new DjvuPage(pageCount++, this, currentHeader, currentThumbnail, sharedItems, form);
+                    if (form.Children.Any(x => x.ChunkType == ChunkTypes.Form_Djvu))
+                    {
+                        DirmComponent currentHeader = pageHeaders.Count() > 0 ? pageHeaders.Dequeue() : null;
+                        TH44Chunk currentThumbnail = thumbnail.Count() > 0 ? thumbnail.Dequeue() : null;
+                        DjvuPage newPage = new DjvuPage(pageCount++, this, currentHeader, currentThumbnail, sharedItems, form);
 
-						pages.Add(newPage);
-					}
-				}
-			}
+                        pages.Add(newPage);
+                    }
+                }
+            }
 
-			Pages = pages.ToArray();
-		}
+            Pages = pages.ToArray();
+        }
 
         /// <summary>
         /// Checks for a valid file header
